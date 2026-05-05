@@ -63,3 +63,6 @@ Right-click the app → Open → Open anyway.
 **No devices listed**: Grant microphone permission in System Settings → Privacy & Security.
 
 **Launch at Login not working**: This requires macOS 13+. The toggle uses `SMAppService.mainApp`.
+
+
+check branch protection
