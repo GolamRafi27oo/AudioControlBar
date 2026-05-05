@@ -1,3 +1,6 @@
+# Warning 
+Don't add any feature which will require mic permission.
+
 # AudioControlBar
 
 A native macOS menu bar app for controlling audio input/output devices, volume, and input level — built for Apple Silicon.
@@ -5,7 +8,7 @@ A native macOS menu bar app for controlling audio input/output devices, volume, 
 ## Requirements
 
 - macOS 13.0 (Ventura) or later
-- Apple Silicon Mac (M1/M2/M3/M4/m5)
+- Apple Silicon Mac (M1/M2/M3/M4/M5)
 - Xcode 15+ (to build)
 
 ## Build & Install
