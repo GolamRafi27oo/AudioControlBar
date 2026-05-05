@@ -28,6 +28,10 @@ The script will:
 
 Double-click `AudioControlBar.dmg`, drag the app to Applications, and launch it.
 
+## Download
+
+⬇️ [Download AudioControlBar for macOS](./AudioControlBar.dmg)
+
 ### 3. Or open directly in Xcode
 
 Double-click `AudioControlBar.xcodeproj` → Product → Run (⌘R)
@@ -63,6 +67,3 @@ Right-click the app → Open → Open anyway.
 **No devices listed**: Grant microphone permission in System Settings → Privacy & Security.
 
 **Launch at Login not working**: This requires macOS 13+. The toggle uses `SMAppService.mainApp`.
-
-
-check branch protection
