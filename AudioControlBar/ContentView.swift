@@ -103,8 +103,6 @@ struct ContentView: View {
             .padding(.vertical, 8)
         }
         .frame(width: 360)
-        .onAppear { audio.startInputMeter() }
-        .onDisappear { audio.stopInputMeter() }
     }
 }
 
@@ -180,17 +178,6 @@ struct AudioSectionView: View {
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundColor(.secondary)
                     .frame(width: 32, alignment: .trailing)
-            }
-
-            // VU Meter (input only)
-            if showLevel {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Input Level")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                    LevelMeterView(level: inputLevel)
-                        .frame(height: 8)
-                }
             }
         }
     }

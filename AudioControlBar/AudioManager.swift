@@ -37,7 +37,6 @@ class AudioManager: ObservableObject {
 
     private init() {
         refresh()
-        startLevelMonitor()
         addSystemListener()
     }
 
@@ -264,63 +263,6 @@ class AudioManager: ObservableObject {
                 DispatchQueue.main.async { self.outputMuted = true }
             }
         }
-    }
-
-    // MARK: - Input Level Meter
-    private func startLevelMonitor() {
-        levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            self?.updateInputLevel()
-        }
-    }
-
-    private func updateInputLevel() {
-        let level = getAudioInputLevel()
-        DispatchQueue.main.async {
-            withAnimation(.linear(duration: 0.05)) {
-                self.inputLevel = level
-            }
-        }
-    }
-
-    private var audioEngine: AVAudioEngine?
-    private var engineStarted = false
-
-    func startInputMeter() {
-        guard !engineStarted else { return }
-
-        // On macOS, AVAudioSession is unavailable. Use AVCaptureDevice to request microphone access.
-        AVCaptureDevice.requestAccess(for: .audio) { granted in
-            DispatchQueue.main.async {
-                guard granted else {
-                    print("Microphone permission not granted")
-                    return
-                }
-                let engine = AVAudioEngine()
-                let inputNode = engine.inputNode
-                let format = inputNode.inputFormat(forBus: 0)
-                inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
-                    let level = self?.calculateLevel(buffer: buffer) ?? 0.0
-                    DispatchQueue.main.async {
-                        self?.inputLevel = min(1.0, level * 3)
-                    }
-                }
-                do {
-                    try engine.start()
-                    self.audioEngine = engine
-                    self.engineStarted = true
-                } catch {
-                    print("Audio engine error: \(error)")
-                }
-            }
-        }
-    }
-
-    func stopInputMeter() {
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-        audioEngine = nil
-        engineStarted = false
-        inputLevel = 0.0
     }
 
     private func calculateLevel(buffer: AVAudioPCMBuffer) -> Float {
