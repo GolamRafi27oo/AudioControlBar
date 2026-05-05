@@ -1,4 +1,4 @@
-# AudioControlBar 🎧
+# AudioControlBar
 
 A native macOS menu bar app for controlling audio input/output devices, volume, and input level — built for Apple Silicon.
 
