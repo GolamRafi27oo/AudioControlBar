@@ -31,7 +31,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("AudioControlBar")
                             .font(.system(size: 12, weight: .semibold))
-                        Text("Version 1.0.0 · macOS Silicon")
+                        Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")) · macOS Silicon")
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
                     }
