@@ -1,272 +1,235 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
     @StateObject private var audio = AudioManager.shared
-    @State private var showSettings = false
+    @State private var page: Page = .audio
+
+    private enum Page { case audio, settings }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Image(systemName: "waveform")
-                    .foregroundColor(.blue)
-                    .font(.system(size: 16, weight: .semibold))
-                Text("Audio Control")
-                    .font(.system(size: 15, weight: .semibold))
-                Spacer()
-                Button(action: { showSettings.toggle() }) {
-                    Image(systemName: showSettings ? "xmark.circle.fill" : "gearshape.fill")
-                        .foregroundColor(.secondary)
-                        .font(.system(size: 15))
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color(NSColor.windowBackgroundColor))
-
-            Divider()
-
-            if showSettings {
-                SettingsView()
-            } else {
-                ScrollView {
-                    VStack(spacing: 12) {
-                        // OUTPUT SECTION
-                        AudioSectionView(
-                            title: "Output",
-                            systemIcon: "speaker.wave.3.fill",
-                            iconColor: .blue,
-                            devices: audio.outputDevices,
-                            selectedDevice: audio.selectedOutputDevice,
-                            volume: $audio.outputVolume,
-                            muted: audio.outputMuted,
-                            showLevel: false,
-                            inputLevel: .constant(0),
-                            onSelectDevice: { audio.setDefaultDevice($0, isInput: false) },
-                            onVolumeChange: { audio.setVolume($0, isInput: false) },
-                            onMuteToggle: { audio.toggleMute(isInput: false) }
-                        )
-
-                        Divider().padding(.horizontal, 12)
-
-                        // INPUT SECTION
-                        AudioSectionView(
-                            title: "Input",
-                            systemIcon: "mic.fill",
-                            iconColor: .green,
-                            devices: audio.inputDevices,
-                            selectedDevice: audio.selectedInputDevice,
-                            volume: $audio.inputVolume,
-                            muted: audio.inputMuted,
-                            showLevel: true,
-                            inputLevel: $audio.inputLevel,
-                            onSelectDevice: { audio.setDefaultDevice($0, isInput: true) },
-                            onVolumeChange: { audio.setVolume($0, isInput: true) },
-                            onMuteToggle: { audio.toggleMute(isInput: true) }
-                        )
+        ZStack {
+            GlassBackdrop()
+            VStack(spacing: 0) {
+                header
+                Group {
+                    if page == .audio {
+                        audioPage.transition(.opacity.combined(with: .move(edge: .leading)))
+                    } else {
+                        SettingsView().transition(.opacity.combined(with: .move(edge: .trailing)))
                     }
-                    .padding(12)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                footer
             }
-
-            Divider()
-
-            // Footer
-            HStack {
-                Button(action: { audio.refresh() }) {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                        .font(.system(size: 11))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(.secondary)
-
-                Spacer()
-
-                Button("Open Sound Settings") {
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.sound")!)
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11))
-                .foregroundColor(.secondary)
-
-                Spacer()
-
-                Button(action: { NSApp.terminate(nil) }) {
-                    Label("Quit", systemImage: "power")
-                        .font(.system(size: 11))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
-        .frame(width: 360)
+        .frame(width: 400, height: 600)
+        .animation(.snappy(duration: 0.28), value: page)
+    }
+
+    private var header: some View {
+        HStack(spacing: 11) {
+            ZStack {
+                Circle().fill(Color.accentColor.gradient)
+                Image(systemName: "waveform")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .frame(width: 32, height: 32)
+            .shadow(color: Color.accentColor.opacity(0.28), radius: 8, y: 4)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(page == .audio ? "Audio Control" : "Settings")
+                    .font(.system(size: 15, weight: .semibold))
+                Text(page == .audio ? statusSummary : "Personalize your menu bar app")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            GlassIconButton(systemName: page == .audio ? "gearshape.fill" : "xmark", help: page == .audio ? "Settings" : "Close settings") {
+                page = page == .audio ? .settings : .audio
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+    }
+
+    private var audioPage: some View {
+        ScrollView {
+            VStack(spacing: 14) {
+                AudioSectionView(
+                    title: "Output", subtitle: "Sound playback", systemIcon: "speaker.wave.3.fill", iconColor: .blue,
+                    devices: audio.outputDevices, selectedDevice: audio.selectedOutputDevice, volume: audio.outputVolume, muted: audio.outputMuted,
+                    onSelectDevice: { audio.setDefaultDevice($0, isInput: false) },
+                    onVolumeChange: { audio.setVolume($0, isInput: false) },
+                    onMuteToggle: { audio.toggleMute(isInput: false) }
+                )
+                AudioSectionView(
+                    title: "Input", subtitle: "Microphone level", systemIcon: "mic.fill", iconColor: .mint,
+                    devices: audio.inputDevices, selectedDevice: audio.selectedInputDevice, volume: audio.inputVolume, muted: audio.inputMuted,
+                    onSelectDevice: { audio.setDefaultDevice($0, isInput: true) },
+                    onVolumeChange: { audio.setVolume($0, isInput: true) },
+                    onMuteToggle: { audio.toggleMute(isInput: true) }
+                )
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private var footer: some View {
+        HStack(spacing: 14) {
+            Button { audio.refresh() } label: { Label("Refresh", systemImage: "arrow.clockwise") }
+            Spacer()
+            Button {
+                guard let url = URL(string: "x-apple.systempreferences:com.apple.Sound-Settings.extension") else { return }
+                NSWorkspace.shared.open(url)
+            } label: { Label("Sound Settings", systemImage: "slider.horizontal.3") }
+            Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }
+                .help("Quit AudioControlBar")
+        }
+        .font(.system(size: 11.5, weight: .medium))
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 12)
+        .frame(height: 43)
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous), prominence: .clear)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+    }
+
+    private var statusSummary: String {
+        "Playing through \(audio.selectedOutputDevice?.name ?? "No output")"
     }
 }
 
-// MARK: - Audio Section
 struct AudioSectionView: View {
     let title: String
+    let subtitle: String
     let systemIcon: String
     let iconColor: Color
     let devices: [AudioDevice]
     let selectedDevice: AudioDevice?
-    @Binding var volume: Float
+    let volume: Float
     let muted: Bool
-    let showLevel: Bool
-    @Binding var inputLevel: Float
     let onSelectDevice: (AudioDevice) -> Void
     let onVolumeChange: (Float) -> Void
     let onMuteToggle: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Section header
-            HStack {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
                 Image(systemName: systemIcon)
-                    .foregroundColor(iconColor)
-                    .font(.system(size: 13, weight: .semibold))
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 32, height: 32)
+                    .background(iconColor.opacity(0.13), in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).font(.system(size: 14, weight: .semibold))
+                    Text(subtitle).font(.system(size: 10.5)).foregroundStyle(.secondary)
+                }
                 Spacer()
+                Text(muted ? "Muted" : "\(Int(volume * 100))%")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(muted ? .red : .secondary)
+                    .contentTransition(.numericText())
+                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .background(.primary.opacity(0.055), in: Capsule())
             }
+            deviceList
+            volumeControl
+        }
+        .padding(15)
+        .glassCard(tint: iconColor.opacity(0.05))
+    }
 
-            // Device picker
-            if !devices.isEmpty {
-                VStack(spacing: 4) {
-                    ForEach(devices) { device in
-                        DeviceRowView(
-                            device: device,
-                            isSelected: selectedDevice?.id == device.id,
-                            onTap: { onSelectDevice(device) }
-                        )
-                    }
+    private var deviceList: some View {
+        VStack(spacing: 3) {
+            if devices.isEmpty {
+                VStack(spacing: 5) {
+                    Image(systemName: systemIcon).font(.system(size: 18)).foregroundStyle(.secondary)
+                    Text("No \(title) Devices").font(.system(size: 11.5, weight: .medium))
+                    Text("Connect a device, then refresh.").font(.system(size: 10)).foregroundStyle(.secondary)
                 }
-                .padding(6)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color(NSColor.controlBackgroundColor)))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 0.5))
+                .frame(maxWidth: .infinity).frame(height: 82)
             } else {
-                Text("No \(title.lowercased()) devices found")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-                    .padding(8)
-            }
-
-            // Volume slider
-            HStack(spacing: 8) {
-                Button(action: onMuteToggle) {
-                    Image(systemName: muteIcon)
-                        .foregroundColor(muted ? .red : .primary)
-                        .font(.system(size: 14))
-                        .frame(width: 20)
+                ForEach(devices) { device in
+                    DeviceRowView(device: device, isSelected: selectedDevice?.id == device.id, accent: iconColor) { onSelectDevice(device) }
                 }
-                .buttonStyle(.plain)
-
-                Slider(
-                    value: Binding(
-                        get: { Double(volume) },
-                        set: { onVolumeChange(Float($0)) }
-                    ),
-                    in: 0...1
-                )
-                .accentColor(muted ? .red : iconColor)
-                .disabled(muted)
-
-                Text("\(Int(volume * 100))%")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundColor(.secondary)
-                    .frame(width: 32, alignment: .trailing)
             }
+        }
+        .padding(5)
+        .background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var volumeControl: some View {
+        HStack(spacing: 11) {
+            Button(action: onMuteToggle) {
+                Image(systemName: muteIcon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(muted ? .red : iconColor)
+                    .frame(width: 30, height: 30)
+                    .background((muted ? Color.red : iconColor).opacity(0.11), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .help(muted ? "Unmute \(title.lowercased())" : "Mute \(title.lowercased())")
+            Slider(value: Binding(get: { Double(volume) }, set: { onVolumeChange(Float($0)) }), in: 0...1)
+                .tint(muted ? .red : iconColor)
+                .disabled(muted)
+            Image(systemName: title == "Output" ? "speaker.wave.3.fill" : "waveform")
+                .font(.system(size: 11, weight: .medium)).foregroundStyle(.tertiary).frame(width: 16)
         }
     }
 
     private var muteIcon: String {
-        if title == "Output" {
-            return muted ? "speaker.slash.fill" : "speaker.wave.2.fill"
-        } else {
-            return muted ? "mic.slash.fill" : "mic.fill"
-        }
+        title == "Output" ? (muted ? "speaker.slash.fill" : "speaker.wave.1.fill") : (muted ? "mic.slash.fill" : "mic.fill")
     }
 }
 
-// MARK: - Device Row
 struct DeviceRowView: View {
     let device: AudioDevice
     let isSelected: Bool
+    let accent: Color
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 Image(systemName: transportIcon(device.transportType))
-                    .foregroundColor(isSelected ? .white : .secondary)
-                    .font(.system(size: 12))
-                    .frame(width: 16)
-
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(isSelected ? accent : .secondary)
+                    .frame(width: 25, height: 25)
+                    .background(isSelected ? accent.opacity(0.14) : .clear, in: Circle())
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(device.name)
-                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
-                        .foregroundColor(isSelected ? .white : .primary)
-                        .lineLimit(1)
-                    Text(device.transportType)
-                        .font(.system(size: 10))
-                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                    Text(device.name).font(.system(size: 12, weight: isSelected ? .semibold : .regular)).foregroundStyle(.primary).lineLimit(1)
+                    Text(device.transportType).font(.system(size: 9.5)).foregroundStyle(.secondary)
                 }
-
                 Spacer()
-
                 if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.white)
-                        .font(.system(size: 11, weight: .semibold))
+                    Image(systemName: "checkmark.circle.fill").font(.system(size: 14, weight: .semibold)).foregroundStyle(accent)
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isSelected ? Color.blue : Color.clear)
-            )
+            .padding(.horizontal, 8).frame(height: 42)
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background(isSelected ? accent.opacity(0.075) : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
+        .animation(.easeOut(duration: 0.18), value: isSelected)
     }
 
-    func transportIcon(_ type: String) -> String {
+    private func transportIcon(_ type: String) -> String {
         switch type {
         case "Bluetooth": return "wave.3.right"
         case "USB": return "cable.connector"
         case "HDMI": return "display"
         case "Built-in": return "macbook"
-        case "Virtual": return "cpu"
+        case "Virtual": return "square.stack.3d.up"
+        case "Thunderbolt": return "bolt.horizontal.fill"
         default: return "headphones"
         }
-    }
-}
-
-// MARK: - Level Meter
-struct LevelMeterView: View {
-    let level: Float
-    private let segments = 20
-
-    var body: some View {
-        GeometryReader { geo in
-            HStack(spacing: 2) {
-                ForEach(0..<segments, id: \.self) { i in
-                    let threshold = Float(i) / Float(segments)
-                    let active = level > threshold
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(active ? segmentColor(i) : Color.secondary.opacity(0.2))
-                        .animation(.linear(duration: 0.05), value: active)
-                }
-            }
-        }
-    }
-
-    func segmentColor(_ index: Int) -> Color {
-        if index < 14 { return .green }
-        if index < 17 { return .yellow }
-        return .red
     }
 }

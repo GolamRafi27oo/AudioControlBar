@@ -1,212 +1,99 @@
 import SwiftUI
 
-struct LiquidGlass: View {
-    var cornerRadius: CGFloat = 16
-    var tint: Color = .white.opacity(0.2)
-    var highlight: Color = .white.opacity(0.6)
-    var shadow: Color = .black.opacity(0.25)
-    var intensity: Double = 0.6
-    var interactive: Bool = true
+enum GlassProminence { case regular, clear }
 
-    #if os(macOS)
-    @State private var pointerLocation: CGPoint = .zero
-    #else
-    // On iOS/tvOS/watchOS no pointerLocation needed
-    #endif
+struct AdaptiveGlassModifier<S: Shape>: ViewModifier {
+    let shape: S
+    let tint: Color?
+    let prominence: GlassProminence
+    let interactive: Bool
 
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                // Background blur material with corner radius
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                
-                // Gradient tint overlay
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                tint.opacity(intensity),
-                                tint.opacity(intensity * 0.4)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content.modifier(NativeGlassModifier(shape: shape, tint: tint, prominence: prominence, interactive: interactive))
+        } else {
+            content
+                .background(.ultraThinMaterial, in: shape)
+                .overlay {
+                    shape.stroke(
+                        LinearGradient(colors: [.white.opacity(0.42), .white.opacity(0.08)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                        lineWidth: 0.75
                     )
-                
-                // Inner highlight stroke with blend mode overlay
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(highlight, lineWidth: 1.5)
-                    .blendMode(.overlay)
-
-                // Soft outer shadow
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(shadow.opacity(0.5), lineWidth: 1)
-                    .shadow(color: shadow, radius: 8, x: 0, y: 4)
-                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                
-                // Specular highlight
-                if interactive {
-                    // Specular highlight shape
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                gradient: Gradient(colors: [
-                                    highlight.opacity(0.6),
-                                    highlight.opacity(0)
-                                ]),
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: geo.size.width * 0.5
-                            )
-                        )
-                        .frame(width: geo.size.width * 1.5, height: geo.size.width * 1.5)
-                        .position(pointerPosition(in: geo.size))
-                        .animation(.easeOut(duration: 0.3), value: pointerLocation)
-                        .allowsHitTesting(false)
                 }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            #if os(macOS)
-            .onHover { hover in
-                if hover {
-                    // do nothing on hover start; keep tracking mouse move
-                } else {
-                    // When mouse leaves, reset pointer to center
-                    pointerLocation = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-                }
-            }
-            .background(
-                MouseTrackingView { location in
-                    pointerLocation = location
-                }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            )
-            #endif
-        }
-        .aspectRatio(1, contentMode: .fit)
-    }
-
-    #if os(macOS)
-    // Calculate the specular highlight position, clamped inside the view bounds
-    private func pointerPosition(in size: CGSize) -> CGPoint {
-        let x = min(max(pointerLocation.x, 0), size.width)
-        let y = min(max(pointerLocation.y, 0), size.height)
-        return CGPoint(x: x, y: y)
-    }
-    #else
-    private func pointerPosition(in size: CGSize) -> CGPoint {
-        CGPoint(x: size.width * 0.3, y: size.height * 0.3)
-    }
-    #endif
-}
-
-#if os(macOS)
-/// NSViewRepresentable to track mouse location inside the view
-fileprivate struct MouseTrackingView: NSViewRepresentable {
-    var onMove: (CGPoint) -> Void
-
-    func makeNSView(context: Context) -> NSTrackingView {
-        let view = NSTrackingView()
-        view.onMove = onMove
-        return view
-    }
-
-    func updateNSView(_ nsView: NSTrackingView, context: Context) { }
-    
-    class NSTrackingView: NSView {
-        var onMove: ((CGPoint) -> Void)?
-
-        override func updateTrackingAreas() {
-            super.updateTrackingAreas()
-            trackingAreas.forEach { removeTrackingArea($0) }
-            let options: NSTrackingArea.Options = [.mouseMoved, .activeInActiveApp, .inVisibleRect]
-            let trackingArea = NSTrackingArea(rect: bounds, options: options, owner: self, userInfo: nil)
-            addTrackingArea(trackingArea)
-        }
-
-        override func mouseMoved(with event: NSEvent) {
-            let location = convert(event.locationInWindow, from: nil)
-            onMove?(location)
+                .shadow(color: .black.opacity(0.10), radius: 14, y: 7)
         }
     }
 }
-#endif
 
-struct LiquidGlassContainerStyle: ViewModifier {
-    var cornerRadius: CGFloat
-
-    @Environment(\.colorScheme) private var colorScheme
+@available(macOS 26.0, *)
+private struct NativeGlassModifier<S: Shape>: ViewModifier {
+    let shape: S
+    let tint: Color?
+    let prominence: GlassProminence
+    let interactive: Bool
 
     func body(content: Content) -> some View {
-        content
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(
-                        colorScheme == .dark
-                        ? Color.white.opacity(0.1)
-                        : Color.black.opacity(0.08),
-                        lineWidth: 1
-                    )
-            )
+        var glass: Glass = prominence == .clear ? .clear : .regular
+        if let tint { glass = glass.tint(tint) }
+        if interactive { glass = glass.interactive() }
+        return content.glassEffect(glass, in: shape)
     }
 }
 
 extension View {
-    func liquidGlassContainer(
-        cornerRadius: CGFloat = 16,
-        tint: Color = .white.opacity(0.18),
-        intensity: Double = 0.6
-    ) -> some View {
-        self
-            .padding()
-            .background(
-                LiquidGlass(
-                    cornerRadius: cornerRadius,
-                    tint: tint,
-                    intensity: intensity
-                )
-            )
-            .modifier(LiquidGlassContainerStyle(cornerRadius: cornerRadius))
+    func adaptiveGlass<S: Shape>(in shape: S, tint: Color? = nil, prominence: GlassProminence = .regular, interactive: Bool = false) -> some View {
+        modifier(AdaptiveGlassModifier(shape: shape, tint: tint, prominence: prominence, interactive: interactive))
+    }
+
+    func glassCard(tint: Color? = nil) -> some View {
+        adaptiveGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous), tint: tint)
     }
 }
 
-#Preview {
-    VStack(spacing: 20) {
-        Text("Liquid Glass Panel")
-            .font(.title.weight(.semibold))
-            .foregroundColor(.primary)
+struct GlassBackdrop: View {
+    @Environment(\.colorScheme) private var colorScheme
 
-        VStack(spacing: 12) {
-            HStack {
-                Text("Volume")
-                Slider(value: .constant(0.5))
-            }
-            HStack {
-                Text("Balance")
-                Slider(value: .constant(0.3))
-            }
-            HStack {
-                Text("Bass")
-                Slider(value: .constant(0.7))
-            }
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: colorScheme == .dark
+                    ? [Color(red: 0.055, green: 0.065, blue: 0.09), Color(red: 0.09, green: 0.075, blue: 0.13)]
+                    : [Color(red: 0.92, green: 0.96, blue: 1), Color(red: 0.97, green: 0.93, blue: 1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Circle()
+                .fill(Color.blue.opacity(colorScheme == .dark ? 0.28 : 0.22))
+                .frame(width: 270, height: 270)
+                .blur(radius: 55)
+                .offset(x: -155, y: -210)
+            Circle()
+                .fill(Color.purple.opacity(colorScheme == .dark ? 0.22 : 0.16))
+                .frame(width: 240, height: 240)
+                .blur(radius: 60)
+                .offset(x: 175, y: 210)
         }
-        .padding()
-        .liquidGlassContainer(cornerRadius: 24, tint: .blue.opacity(0.25), intensity: 0.7)
-        .frame(maxWidth: 340)
-    }
-    .padding(40)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(
-        LinearGradient(
-            colors: [
-                Color.blue.opacity(0.15),
-                Color.purple.opacity(0.1)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
         .ignoresSafeArea()
-    )
+    }
+}
+
+struct GlassIconButton: View {
+    let systemName: String
+    let help: String
+    var tint: Color? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 13, weight: .semibold))
+                .frame(width: 30, height: 30)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(tint ?? .primary)
+        .adaptiveGlass(in: Circle(), tint: tint?.opacity(0.16), prominence: .clear, interactive: true)
+        .help(help)
+    }
 }
