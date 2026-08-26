@@ -14,35 +14,34 @@ struct ContentView: View {
                 header
                 Group {
                     if page == .audio {
-                        audioPage.transition(.opacity.combined(with: .move(edge: .leading)))
+                        audioPage.transition(.opacity)
                     } else {
-                        SettingsView().transition(.opacity.combined(with: .move(edge: .trailing)))
+                        SettingsView().transition(.opacity)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 footer
             }
         }
-        .frame(width: 400, height: 600)
-        .animation(.snappy(duration: 0.28), value: page)
+        .frame(width: 360, height: 500)
+        .animation(.easeOut(duration: 0.16), value: page)
     }
 
     private var header: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 9) {
             ZStack {
                 Circle().fill(Color.accentColor.gradient)
                 Image(systemName: "waveform")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.white)
             }
-            .frame(width: 32, height: 32)
-            .shadow(color: Color.accentColor.opacity(0.28), radius: 8, y: 4)
+            .frame(width: 28, height: 28)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(page == .audio ? "Audio Control" : "Settings")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                 Text(page == .audio ? statusSummary : "Personalize your menu bar app")
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -51,14 +50,14 @@ struct ContentView: View {
                 page = page == .audio ? .settings : .audio
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 16)
-        .padding(.bottom, 12)
+        .padding(.horizontal, 13)
+        .padding(.top, 11)
+        .padding(.bottom, 9)
     }
 
     private var audioPage: some View {
         ScrollView {
-            VStack(spacing: 14) {
+            VStack(spacing: 10) {
                 AudioSectionView(
                     title: "Output", subtitle: "Sound playback", systemIcon: "speaker.wave.3.fill", iconColor: .blue,
                     devices: audio.outputDevices, selectedDevice: audio.selectedOutputDevice, volume: audio.outputVolume, muted: audio.outputMuted,
@@ -74,15 +73,16 @@ struct ContentView: View {
                     onMuteToggle: { audio.toggleMute(isInput: true) }
                 )
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 2)
         }
         .scrollIndicators(.hidden)
     }
 
     private var footer: some View {
-        HStack(spacing: 14) {
-            Button { audio.refresh() } label: { Label("Refresh", systemImage: "arrow.clockwise") }
+        HStack(spacing: 12) {
+            Button { audio.refresh() } label: { Image(systemName: "arrow.clockwise") }
+                .help("Refresh devices")
             Spacer()
             Button {
                 guard let url = URL(string: "x-apple.systempreferences:com.apple.Sound-Settings.extension") else { return }
@@ -91,14 +91,14 @@ struct ContentView: View {
             Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }
                 .help("Quit AudioControlBar")
         }
-        .font(.system(size: 11.5, weight: .medium))
+        .font(.system(size: 10.5, weight: .medium))
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 12)
-        .frame(height: 43)
-        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous), prominence: .clear)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 11)
+        .frame(height: 36)
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous), prominence: .clear)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 
     private var statusSummary: String {
@@ -120,58 +120,58 @@ struct AudioSectionView: View {
     let onMuteToggle: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 8) {
                 Image(systemName: systemIcon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(iconColor)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 27, height: 27)
                     .background(iconColor.opacity(0.13), in: Circle())
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(title).font(.system(size: 14, weight: .semibold))
-                    Text(subtitle).font(.system(size: 10.5)).foregroundStyle(.secondary)
+                    Text(title).font(.system(size: 13, weight: .semibold))
+                    Text(subtitle).font(.system(size: 9.5)).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Text(muted ? "Muted" : "\(Int(volume * 100))%")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(muted ? .red : .secondary)
                     .contentTransition(.numericText())
-                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .padding(.horizontal, 7).padding(.vertical, 3)
                     .background(.primary.opacity(0.055), in: Capsule())
             }
             deviceList
             volumeControl
         }
-        .padding(15)
+        .padding(11)
         .glassCard(tint: iconColor.opacity(0.05))
     }
 
     private var deviceList: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 1) {
             if devices.isEmpty {
-                VStack(spacing: 5) {
-                    Image(systemName: systemIcon).font(.system(size: 18)).foregroundStyle(.secondary)
-                    Text("No \(title) Devices").font(.system(size: 11.5, weight: .medium))
-                    Text("Connect a device, then refresh.").font(.system(size: 10)).foregroundStyle(.secondary)
+                VStack(spacing: 3) {
+                    Image(systemName: systemIcon).font(.system(size: 15)).foregroundStyle(.secondary)
+                    Text("No \(title) Devices").font(.system(size: 10.5, weight: .medium))
+                    Text("Connect a device, then refresh.").font(.system(size: 9)).foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity).frame(height: 82)
+                .frame(maxWidth: .infinity).frame(height: 58)
             } else {
                 ForEach(devices) { device in
                     DeviceRowView(device: device, isSelected: selectedDevice?.id == device.id, accent: iconColor) { onSelectDevice(device) }
                 }
             }
         }
-        .padding(5)
-        .background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(3)
+        .background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
     }
 
     private var volumeControl: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 8) {
             Button(action: onMuteToggle) {
                 Image(systemName: muteIcon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(muted ? .red : iconColor)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 26, height: 26)
                     .background((muted ? Color.red : iconColor).opacity(0.11), in: Circle())
             }
             .buttonStyle(.plain)
@@ -197,15 +197,15 @@ struct DeviceRowView: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 10) {
+            HStack(spacing: 7) {
                 Image(systemName: transportIcon(device.transportType))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(isSelected ? accent : .secondary)
-                    .frame(width: 25, height: 25)
+                    .frame(width: 22, height: 22)
                     .background(isSelected ? accent.opacity(0.14) : .clear, in: Circle())
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(device.name).font(.system(size: 12, weight: isSelected ? .semibold : .regular)).foregroundStyle(.primary).lineLimit(1)
-                    Text(device.transportType).font(.system(size: 9.5)).foregroundStyle(.secondary)
+                    Text(device.name).font(.system(size: 11, weight: isSelected ? .semibold : .regular)).foregroundStyle(.primary).lineLimit(1)
+                    Text(device.transportType).font(.system(size: 8.5)).foregroundStyle(.secondary)
                 }
                 Spacer()
                 if isSelected {
@@ -213,12 +213,12 @@ struct DeviceRowView: View {
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, 8).frame(height: 42)
+            .padding(.horizontal, 7).frame(height: 34)
             .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .background(isSelected ? accent.opacity(0.075) : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
-        .animation(.easeOut(duration: 0.18), value: isSelected)
+        .animation(.easeOut(duration: 0.12), value: isSelected)
     }
 
     private func transportIcon(_ type: String) -> String {

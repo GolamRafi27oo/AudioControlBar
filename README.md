@@ -3,13 +3,13 @@ Don't add any feature which will require mic permission.
 
 # AudioControlBar
 
-A native macOS menu bar app for controlling audio input/output devices, volume, and input level — built for Apple Silicon.
+A native macOS menu bar app for switching audio input/output devices and controlling volume, built for Apple Silicon.
 
 ## Requirements
 
 - macOS 13.0 (Ventura) or later
 - Apple Silicon Mac (M1/M2/M3/M4/M5)
-- Xcode 15+ (to build)
+- Xcode 26+ (to build the native Liquid Glass interface)
 
 ## Build & Install
 
@@ -41,23 +41,20 @@ Double-click `AudioControlBar.xcodeproj` → Product → Run (⌘R)
 
 ## Permissions
 
-On first launch, macOS will ask for **Microphone** permission — this is required for the live input level meter. You can grant it in:
-
-> System Settings → Privacy & Security → Microphone → AudioControlBar ✓
+AudioControlBar uses Core Audio device controls and does not request microphone access.
 
 
 ## File Structure
 
 ```
 AudioControlBar/
-├── AudioControlBarApp.swift   # @main SwiftUI entry point
-├── AppDelegate.swift          # NSStatusItem + popover management
-├── AudioManager.swift         # CoreAudio device list, volume, VU meter
-├── ContentView.swift          # Main popover UI (output + input sections)
-├── SettingsView.swift         # Settings panel with launch-at-login
-├── Info.plist                 # LSUIElement = true (hides from Dock)
-├── AudioControlBar.entitlements
-└── Assets.xcassets/
+├── App/                       # App entry point and menu bar lifecycle
+├── Core/Audio/                # Core Audio device and volume services
+├── DesignSystem/              # Liquid Glass components and styling
+├── Features/
+│   ├── Audio/                 # Main audio controls
+│   └── Settings/              # App settings
+└── Resources/                 # Assets, Info.plist, and entitlements
 ```
 
 ## Troubleshooting
@@ -67,6 +64,6 @@ AudioControlBar/
 **"AudioControlBar can't be opened because it's from an unidentified developer"**:
 Right-click the app → Open → Open anyway.
 
-**No devices listed**: Grant microphone permission in System Settings → Privacy & Security.
+**No devices listed**: Reconnect the device and select Refresh. Confirm that macOS recognizes it in System Settings → Sound.
 
 **Launch at Login not working**: This requires macOS 13+. The toggle uses `SMAppService.mainApp`.

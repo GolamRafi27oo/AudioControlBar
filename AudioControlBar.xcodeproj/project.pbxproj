@@ -50,18 +50,23 @@
 		A4000001 /* AudioControlBar */ = {
 			isa = PBXGroup;
 			children = (
-				A2000001 /* AudioControlBarApp.swift */,
-				A2000002 /* AppDelegate.swift */,
-				A2000003 /* AudioManager.swift */,
-				A2000004 /* ContentView.swift */,
-				A2000005 /* SettingsView.swift */,
-				A2000006 /* Assets.xcassets */,
-				A2000007 /* Info.plist */,
-				2B4EB70A2FA931D900F51836 /* LiquidGlass.swift */,
+				A4000003 /* App */,
+				A4000004 /* Core */,
+				A4000006 /* DesignSystem */,
+				A4000007 /* Features */,
+				A400000A /* Resources */,
 			);
 			path = AudioControlBar;
 			sourceTree = "<group>";
 		};
+		A4000003 /* App */ = { isa = PBXGroup; children = ( A2000001 /* AudioControlBarApp.swift */, A2000002 /* AppDelegate.swift */, ); path = App; sourceTree = "<group>"; };
+		A4000004 /* Core */ = { isa = PBXGroup; children = ( A4000005 /* Audio */, ); path = Core; sourceTree = "<group>"; };
+		A4000005 /* Audio */ = { isa = PBXGroup; children = ( A2000003 /* AudioManager.swift */, ); path = Audio; sourceTree = "<group>"; };
+		A4000006 /* DesignSystem */ = { isa = PBXGroup; children = ( 2B4EB70A2FA931D900F51836 /* LiquidGlass.swift */, ); path = DesignSystem; sourceTree = "<group>"; };
+		A4000007 /* Features */ = { isa = PBXGroup; children = ( A4000008 /* Audio */, A4000009 /* Settings */, ); path = Features; sourceTree = "<group>"; };
+		A4000008 /* Audio */ = { isa = PBXGroup; children = ( A2000004 /* ContentView.swift */, ); path = Audio; sourceTree = "<group>"; };
+		A4000009 /* Settings */ = { isa = PBXGroup; children = ( A2000005 /* SettingsView.swift */, ); path = Settings; sourceTree = "<group>"; };
+		A400000A /* Resources */ = { isa = PBXGroup; children = ( A2000006 /* Assets.xcassets */, A2000007 /* Info.plist */, ); path = Resources; sourceTree = "<group>"; };
 		A4000002 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -276,8 +281,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AudioControlBar/AudioControlBar.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AudioControlBar/Resources/AudioControlBar.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -287,7 +291,7 @@
 				DEVELOPMENT_TEAM = SB93A72XX6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = AudioControlBar/Info.plist;
+				INFOPLIST_FILE = AudioControlBar/Resources/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -306,8 +310,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AudioControlBar/AudioControlBar.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AudioControlBar/Resources/AudioControlBar.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -317,7 +320,7 @@
 				DEVELOPMENT_TEAM = SB93A72XX6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = AudioControlBar/Info.plist;
+				INFOPLIST_FILE = AudioControlBar/Resources/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

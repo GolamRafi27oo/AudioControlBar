@@ -1,2 +1,32 @@
-build
-AudioControlBar.dmg
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user data
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# Build products and caches
+build/
+DerivedData/
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Temporary files
+*.swp
+*.tmp
+*~
+
+# Disk images are generated artifacts. Keep the published installer tracked.
+*.dmg
+!AudioControlBar.dmg
