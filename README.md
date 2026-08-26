@@ -1,9 +1,8 @@
-# Warning 
-Don't add any feature which will require mic permission.
-
 # AudioControlBar
 
-A native macOS menu bar app for switching audio input/output devices and controlling volume, built for Apple Silicon.
+A compact macOS menu bar app for switching audio input/output devices and controlling volume, built for Apple Silicon with Liquid Glass.
+
+Current release: **1.3.0 (build 3)**
 
 ## Requirements
 
@@ -35,6 +34,22 @@ Double-click `AudioControlBar.dmg`, drag the app to Applications, and launch it.
 
 ⬇️ [Download AudioControlBar for macOS](./AudioControlBar.dmg)
 
+### Verify the download
+
+The SHA-256 checksum for the version 1.3.0 DMG is:
+
+```text
+fb98fa7f16bfc89ca187f3ef6f10d3938ec67e630c1c0dc80286758ceca43f1d
+```
+
+Verify it from Terminal:
+
+```bash
+shasum -a 256 AudioControlBar.dmg
+```
+
+The result should match the checksum above exactly.
+
 ### 3. Or open directly in Xcode
 
 Double-click `AudioControlBar.xcodeproj` → Product → Run (⌘R)
@@ -42,6 +57,7 @@ Double-click `AudioControlBar.xcodeproj` → Product → Run (⌘R)
 ## Permissions
 
 AudioControlBar uses Core Audio device controls and does not request microphone access.
+Please keep future features compatible with this no-microphone-permission policy.
 
 ## Automatic Updates
 
@@ -56,9 +72,7 @@ To publish a release:
 4. Run Sparkle's `generate_appcast` against the DMG using the matching GitHub release URL.
 5. Commit and push the updated `appcast.xml` to `main`.
 
-The Sparkle private EdDSA key remains in the release maintainer's Keychain. Back it up securely;
-never commit it to this repository.
-
+The Sparkle private EdDSA key remains in the release maintainer's Keychain. Back it up securely; never commit it to this repository. Regenerate and publish the SHA-256 checksum whenever the DMG changes.
 
 ## File Structure
 
@@ -66,6 +80,7 @@ never commit it to this repository.
 AudioControlBar/
 ├── App/                       # App entry point and menu bar lifecycle
 ├── Core/Audio/                # Core Audio device and volume services
+├── Core/Updates/              # Sparkle automatic-update integration
 ├── DesignSystem/              # Liquid Glass components and styling
 ├── Features/
 │   ├── Audio/                 # Main audio controls
