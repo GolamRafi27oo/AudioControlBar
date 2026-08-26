@@ -2,11 +2,13 @@ import AppKit
 import SwiftUI
 import Combine
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
     var eventMonitor: EventMonitor?
     private var cancellables = Set<AnyCancellable>()
+    let updateController = UpdateController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide dock icon

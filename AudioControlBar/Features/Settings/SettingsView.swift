@@ -6,6 +6,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 SettingsGroup(title: "General") { LaunchAtLoginToggleRow() }
+                SettingsGroup(title: "Updates") { UpdateSettingsRow() }
                 SettingsGroup(title: "About") {
                     HStack(spacing: 9) {
                         ZStack {
@@ -33,6 +34,29 @@ struct SettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
         return "Version \(version) (\(build))"
+    }
+}
+
+private struct UpdateSettingsRow: View {
+    var body: some View {
+        HStack(spacing: 9) {
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.blue)
+                .frame(width: 28, height: 28)
+                .background(Color.blue.opacity(0.13), in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Software Update").font(.system(size: 11.5, weight: .medium))
+                Text("Checks automatically in the background")
+                    .font(.system(size: 9.5)).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Check Now") {
+                (NSApp.delegate as? AppDelegate)?.updateController.checkForUpdates()
+            }
+            .controlSize(.small)
+        }
+        .padding(10)
     }
 }
 
@@ -66,9 +90,14 @@ private struct LaunchAtLoginToggleRow: View {
                     Text("Start automatically when you log in").font(.system(size: 9.5)).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Toggle("", isOn: $isEnabled)
-                    .labelsHidden().toggleStyle(.switch).controlSize(.small)
-                    .onChange(of: isEnabled) { newValue in setLaunchAtLogin(enabled: newValue) }
+                Toggle(
+                    "",
+                    isOn: Binding(
+                        get: { isEnabled },
+                        set: { updateLaunchAtLogin(enabled: $0) }
+                    )
+                )
+                .labelsHidden().toggleStyle(.switch).controlSize(.small)
             }
             .padding(10)
             if let errorMessage {
@@ -80,10 +109,11 @@ private struct LaunchAtLoginToggleRow: View {
         .onAppear { isEnabled = SMAppService.mainApp.status == .enabled }
     }
 
-    private func setLaunchAtLogin(enabled: Bool) {
+    private func updateLaunchAtLogin(enabled: Bool) {
         do {
             if enabled { try SMAppService.mainApp.register() }
             else { try SMAppService.mainApp.unregister() }
+            isEnabled = enabled
             errorMessage = nil
         } catch {
             errorMessage = "Couldn’t update login settings."

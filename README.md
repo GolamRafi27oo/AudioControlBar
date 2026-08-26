@@ -43,6 +43,22 @@ Double-click `AudioControlBar.xcodeproj` → Product → Run (⌘R)
 
 AudioControlBar uses Core Audio device controls and does not request microphone access.
 
+## Automatic Updates
+
+AudioControlBar uses Sparkle 2 to check for signed updates automatically. Users can also
+select **Settings → Check Now**. The update feed is [`appcast.xml`](./appcast.xml).
+
+To publish a release:
+
+1. Increase `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in the Xcode target.
+2. Build, Developer ID sign, and notarize `AudioControlBar.dmg`.
+3. Create a GitHub release tagged `v<MARKETING_VERSION>` and attach the DMG without renaming it.
+4. Run Sparkle's `generate_appcast` against the DMG using the matching GitHub release URL.
+5. Commit and push the updated `appcast.xml` to `main`.
+
+The Sparkle private EdDSA key remains in the release maintainer's Keychain. Back it up securely;
+never commit it to this repository.
+
 
 ## File Structure
 
