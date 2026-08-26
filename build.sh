@@ -5,7 +5,7 @@
 # Requirements: Xcode 15+, macOS 13+, Apple Silicon Mac
 # ============================================================
 
-set -e
+set -euo pipefail
 
 APP_NAME="AudioControlBar"
 BUNDLE_ID="com.audiocontrolbar.app"
@@ -46,24 +46,10 @@ xcodebuild \
     -configuration Release \
     -arch arm64 \
     ONLY_ACTIVE_ARCH=NO \
+    CODE_SIGNING_ALLOWED=NO \
     BUILD_DIR="$BUILD_DIR" \
     CONFIGURATION_BUILD_DIR="$RELEASE_DIR" \
-    clean build \
-    | xcpretty 2>/dev/null || true
-
-# Fallback without xcpretty
-if [ ! -d "$APP_PATH" ]; then
-    echo "🔨 Retrying build (without xcpretty)..."
-    xcodebuild \
-        -project "$PROJECT_DIR/$APP_NAME.xcodeproj" \
-        -scheme "$APP_NAME" \
-        -configuration Release \
-        -arch arm64 \
-        ONLY_ACTIVE_ARCH=NO \
-        BUILD_DIR="$BUILD_DIR" \
-        CONFIGURATION_BUILD_DIR="$RELEASE_DIR" \
-        clean build
-fi
+    clean build
 
 if [ ! -d "$APP_PATH" ]; then
     echo "❌ Build failed! App not found at: $APP_PATH"
@@ -123,15 +109,17 @@ echo "  To run now: open \"$APP_PATH\""
 echo ""
 
 # ---- Ask to open/run ----
-read -p "  Open app now? (y/n): " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    open "$APP_PATH"
-    echo "  🎉 AudioControlBar launched! Look for the speaker icon in your menu bar."
-fi
+if [ -t 0 ]; then
+    read -p "  Open app now? (y/n): " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        open "$APP_PATH"
+        echo "  🎉 AudioControlBar launched! Look for the speaker icon in your menu bar."
+    fi
 
-read -p "  Open DMG folder? (y/n): " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    open -R "$DMG_PATH"
+    read -p "  Open DMG folder? (y/n): " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        open -R "$DMG_PATH"
+    fi
 fi

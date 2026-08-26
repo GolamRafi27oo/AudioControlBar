@@ -2,11 +2,13 @@ import AppKit
 import SwiftUI
 import Combine
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
     var eventMonitor: EventMonitor?
     private var cancellables = Set<AnyCancellable>()
+    let updateController = UpdateController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide dock icon
@@ -29,7 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupPopover() {
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 360, height: 480)
+        popover?.contentSize = NSSize(width: 360, height: 500)
         popover?.behavior = .transient
         popover?.animates = true
         popover?.contentViewController = NSHostingController(

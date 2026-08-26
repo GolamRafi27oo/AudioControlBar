@@ -1,8 +1,8 @@
 import Foundation
 import CoreAudio
-import AVFoundation
+import AudioToolbox
 import Combine
-import SwiftUI
+import os
 
 struct AudioDevice: Identifiable, Equatable {
     let id: AudioDeviceID
@@ -28,20 +28,13 @@ class AudioManager: ObservableObject {
     @Published var outputVolume: Float = 0.5
     @Published var inputMuted: Bool = false
     @Published var outputMuted: Bool = false
-    @Published var inputLevel: Float = 0.0  // real-time VU meter
-
-    private var levelTimer: Timer?
-    private var listenerAdded = false
+    private let logger = Logger(subsystem: "com.audiocontrolbar.app", category: "AudioManager")
     private var prevOutputVolumeBeforeMute: Float = 0.5
     private var prevInputVolumeBeforeMute: Float = 0.5
 
     private init() {
         refresh()
         addSystemListener()
-    }
-
-    deinit {
-        levelTimer?.invalidate()
     }
 
     // MARK: - Refresh
@@ -183,7 +176,7 @@ class AudioManager: ObservableObject {
         let dataSize = UInt32(MemoryLayout<AudioDeviceID>.size)
         let status = AudioObjectSetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, dataSize, &deviceID)
         guard status == noErr else {
-            print("Failed to set default device (status: \(status))")
+            logger.error("Failed to set the default audio device: \(status, privacy: .public)")
             return
         }
 
@@ -233,7 +226,7 @@ class AudioManager: ObservableObject {
         let dataSize = UInt32(MemoryLayout<Float32>.size)
         let status = AudioObjectSetPropertyData(id, &address, 0, nil, dataSize, &vol)
         if status != noErr {
-            print("Failed to set volume (status: \(status))")
+            logger.error("Failed to set audio volume: \(status, privacy: .public)")
             return
         }
 
@@ -263,24 +256,6 @@ class AudioManager: ObservableObject {
                 DispatchQueue.main.async { self.outputMuted = true }
             }
         }
-    }
-
-    private func calculateLevel(buffer: AVAudioPCMBuffer) -> Float {
-        guard let channelData = buffer.floatChannelData else { return 0 }
-        let frameLength = Int(buffer.frameLength)
-        guard frameLength > 0 else { return 0 }
-        var rms: Float = 0.0
-        for i in 0..<frameLength {
-            let sample = channelData[0][i]
-            rms += sample * sample
-        }
-        rms = sqrt(rms / Float(frameLength))
-        return rms
-    }
-
-    private func getAudioInputLevel() -> Float {
-        // Fallback if engine not started
-        return 0.0
     }
 
     // MARK: - System listener
